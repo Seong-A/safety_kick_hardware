@@ -2,8 +2,9 @@
 
 ## 센서 결합 안전 전동킥보드
 센서를 부착하여 음주상태와 다인 탑승을 검증하고 카메라를 통한 객체 인식으로 안전모 착용을 검증
-hardware -> 
-application -> [https://github.com/Seong-A/safety_kick.git](here)
+
+- [hardware](https://github.com/Seong-A/safety_kick_hardware.git) 
+- [application](https://github.com/Seong-A/safety_kick.git)
 
 ## Hardware
 - Breathalyzer test function ( Arduino uno, MQ-3, buzzer, battery, bluetooth )
