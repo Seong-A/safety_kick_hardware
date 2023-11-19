@@ -1,60 +1,34 @@
 #include <SoftwareSerial.h>
+#include <TinyGPS++.h>
 
-#include <TinyGPS.h>
+SoftwareSerial gpsSerial(13, 12); 
+SoftwareSerial bluetooth(7, 6); 
 
-TinyGPS gps;
-SoftwareSerial ss(13, 12);
+TinyGPSPlus gps; // TinyGPS++ 객체 생성
 
-void setup()
-{
-  Serial.begin(115200);
-  ss.begin(9600);
-  
-  Serial.print("Simple TinyGPS library v. "); Serial.println(TinyGPS::library_version());
-  Serial.println("by Mikal Hart");
-  Serial.println();
+void setup() {
+  Serial.begin(9600); // 시리얼 모니터를 통해 디버깅 정보 출력
+  gpsSerial.begin(9600); // GPS 모듈의 시리얼 통신 시작
+  bluetooth.begin(9600); // 블루투스 통신 시작
 }
 
-void loop()
-{
-  bool newData = false;
-  unsigned long chars;
-  unsigned short sentences, failed;
+void loop() {
+  float latitude = 0.0; // 초기값 설정
+  float longitude = 0.0;
 
-  // For one second we parse GPS data and report some key values
-  for (unsigned long start = millis(); millis() - start < 1000;)
-  {
-    while (ss.available())
-    {
-      char c = ss.read();
-      // Serial.write(c); // uncomment this line if you want to see the GPS data flowing
-      if (gps.encode(c)) // Did a new valid sentence come in?
-        newData = true;
+  while (gpsSerial.available() > 0) {
+    if (gps.encode(gpsSerial.read())) {
+      // GPS 데이터를 파싱하고 위도 및 경도를 가져옵니다
+      if (gps.location.isValid()) {
+        latitude = gps.location.lat();
+        longitude = gps.location.lng();
+        
+        // 블루투스 모듈을 통해 안드로이드 스튜디오로 데이터 전송
+        bluetooth.print("Latitude: ");
+        bluetooth.println(latitude, 6); // 소수점 이하 6자리까지 표시
+        bluetooth.print("Longitude: ");
+        bluetooth.println(longitude, 6);
+      }
     }
   }
-
-  if (newData)
-  {
-    float flat, flon;
-    unsigned long age;
-    gps.f_get_position(&flat, &flon, &age);
-    Serial.print("LAT=");
-    Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
-    Serial.print(" LON=");
-    Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-    Serial.print(" SAT=");
-    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
-    Serial.print(" PREC=");
-    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
-  }
-  
-  gps.stats(&chars, &sentences, &failed);
-  Serial.print(" CHARS=");
-  Serial.print(chars);
-  Serial.print(" SENTENCES=");
-  Serial.print(sentences);
-  Serial.print(" CSUM ERR=");
-  Serial.println(failed);
-  if (chars == 0)
-    Serial.println("** No characters received from GPS: check wiring **");
 }
